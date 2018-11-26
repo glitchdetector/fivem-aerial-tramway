@@ -7,11 +7,12 @@ An implementation of the Pala Springs Aerial Tramway for FiveM
 
 # Features
 Automatically moving cable cars moving up and down the Pala Springs Aerial Tramway
+Syncing between players (during landing at bottom platform)
+Cars can be ridden by entering them and pressing E (while they are docked)
+Audio like the movement sound, doors opening/closing and the arrival/departure cue.
 
 # Disclaimer
-This script does not sync the cars between players and they are not networked
-
-The cars can not be entered, and can not be ridden
+This script tries to sync the cars, but it is not guaranteed that they are synced at all times
 
 # Credits
 Thanks to [IllusiveTea]( https://github.com/IllusiveTea ) for moral support and other helpful things
