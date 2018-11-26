@@ -500,8 +500,8 @@ end
 
 function ReleaseRunningSound(cablecar)
     if cablecar.audio ~= -1 and cablecar.audio ~= nil then
-        StopSound(audio)
-        ReleaseSoundId(audio)
+        StopSound(cablecar.audio)
+        ReleaseSoundId(cablecar.audio)
         cablecar.audio = -1
     end
 end
