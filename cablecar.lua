@@ -3,8 +3,9 @@
     Thanks to:
         IllusiveTea for moral support and introduing me to the topic of cable cars
 
-    These trams do not sync between players, and cannot be used
-    Blah blah made for fun just a proof of concept it serves no purpose other than to be ambient
+    These trams try to sync between players, but is no guaranteed, they only sync whenever the hosts car reaches the bottom
+    You can enter the cars when they are docked, and you'll have to press E to attach yourself, if you're not attached the car kicks you out
+    Cars makes noise upon arrival and departure, and makes a running sound while moving
 ]]
 
 -- Lerp, not to be confused with Liable Emerates Role Play
@@ -81,8 +82,9 @@ local CABLE_CARS = {
         offset_modifier = 0.0, -- Something believed to be an offset modifier
         can_move = true, -- Determine if the car can move, not actually used here though
         is_player_seated = false, -- Another value from the SP script, not actually used because fucking hell I'm tired
-        speed = 5.0, -- Movement speed modifier, determines the speed of the car on the track
+        speed = 7.5, -- Movement speed modifier, determines the speed of the car on the track
         state = "IDLE", -- The current state of the car
+        offset = vector3(-0.2, 0.0, 0.0),
     },
     [1] = { -- Right track car
         entity = nil,
@@ -101,8 +103,9 @@ local CABLE_CARS = {
         offset_modifier = 0.0,
         can_move = true,
         is_player_seated = false,
-        speed = 5.0,
+        speed = 7.5,
         state = "IDLE",
+        offset = vector3(-0.2, 0.0, 0.0),
     },
 }
 
@@ -124,6 +127,10 @@ Citizen.CreateThread(function()
         RequestAnimDict("p_cablecar_s")
         Wait(100)
     end
+    RequestScriptAudioBank("CABLE_CAR", false, -1)
+    RequestScriptAudioBank("CABLE_CAR_SOUNDS", false, -1)
+    LoadStream("CABLE_CAR", "CABLE_CAR_SOUNDS")
+    LoadStream("CABLE_CAR_SOUNDS", "CABLE_CAR")
 
     -- Spawn all them entities and attach the doors to the cars
     CABLE_CARS[0].entity = CreateObjectNoOffset("p_cablecar_s", -740.911, 5599.341, 47.25, 0, 1, 0)
@@ -153,13 +160,11 @@ Citizen.CreateThread(function()
     SetEntityRotation(CABLE_CARS[0].entity, 0.0, 0.0, 270.0, 0, 1)
     SetEntityRotation(CABLE_CARS[1].entity, 0.0, 0.0, 90.0, 0, 1)
 
-    -- Wait before we start moving things
-    Wait(10000)
-    CABLE_CARS[0].state = "MOVE_UP"
-    CABLE_CARS[1].state = "MOVE_UP"
-    CABLE_CARS[0].gradient = 1
-    CABLE_CARS[1].gradient = 1
-
+    -- Initialize the state
+    CABLE_CARS[0].state = "MOVE_TO_IDLE_TOP"
+    CABLE_CARS[1].state = "MOVE_TO_IDLE_TOP"
+    -- KickPlayerOutOfMyCablecar(CABLE_CARS[0])
+    -- KickPlayerOutOfMyCablecar(CABLE_CARS[1])
     -- Control movement forever
     while true do
         Wait(0)
@@ -169,9 +174,40 @@ Citizen.CreateThread(function()
     end
 end)
 
+RegisterNetEvent("omni:cablecar:forceState")
+AddEventHandler("omni:cablecar:forceState", function(index, state)
+    local cablecar = CABLE_CARS[index]
+    if state == "IDLE_BOTTOM" then
+        cablecar.state = "MOVE_TO_IDLE_BOTTOM"
+        cablecar.run_timer = 0.0
+    end
+    if state == "IDLE_TOP" then
+        cablecar.state = "MOVE_TO_IDLE_TOP"
+        cablecar.run_timer = 0.0
+    end
+    if state == "MOVE_DOWN" then
+        cablecar.state = "IDLE_TO_MOVE_DOWN"
+        cablecar.gradient = #TRACKS[index]
+        cablecar.gradient_distance = 0.0
+        cablecar.run_timer = 0.0
+    end
+    if state == "MOVE_UP" then
+        cablecar.state = "IDLE_TO_MOVE_UP"
+        cablecar.gradient = 1
+        cablecar.gradient_distance = 0.0
+        cablecar.run_timer = 0.0
+    end
+end)
+
 AddEventHandler("onResourceStop", function(name)
     -- Delete all cable car things if the resource stops, just so we don't have cable cars galore sitting around
     if name == GetCurrentResourceName() then
+        if CABLE_CARS[0].is_player_seated then
+            KickPlayerOutOfMyCablecar(CABLE_CARS[0])
+        end
+        if CABLE_CARS[1].is_player_seated then
+            KickPlayerOutOfMyCablecar(CABLE_CARS[1])
+        end
         DeleteEntity(CABLE_CARS[0].entity)
         DeleteEntity(CABLE_CARS[1].entity)
         DeleteEntity(CABLE_CARS[0].doorLL)
@@ -184,6 +220,54 @@ AddEventHandler("onResourceStop", function(name)
         DeleteEntity(CABLE_CARS[1].doorRR)
     end
 end)
+
+function DrawCablecarText3D(text, x, y, z, s, font, a)
+    local onScreen, _x, _y = World3dToScreen2d(x, y, z)
+    local px, py, pz = table.unpack(GetGameplayCamCoords())
+    local dist = GetDistanceBetweenCoords(px, py, pz, x, y, z, 1)
+
+    if s == nil then
+        s = 1.0
+    end
+    if font == nil then
+        font = 4
+    end
+    if a == nil then
+        a = 255
+    end
+
+    local scale = ((1 / dist) * 2) * s
+    local fov = (1 / GetGameplayCamFov()) * 100
+    local scale = scale * fov
+
+    if onScreen then
+        if true then
+            SetDrawOrigin(x, y, z, 0)
+        end
+        SetTextScale(0.0 * scale, 1.1 * scale)
+        if true then
+            SetTextFont(font)
+        else
+            SetTextFont(font)
+        end
+        SetTextProportional(1)
+        -- SetTextScale(0.0, 0.55)
+        SetTextColour(255, 255, 255, a)
+        -- SetTextDropshadow(0, 0, 0, 0, 255)
+        SetTextEdge(2, 0, 0, 0, 150)
+        SetTextDropShadow()
+        SetTextOutline()
+        SetTextEntry("STRING")
+        SetTextCentre(1)
+        AddTextComponentString(text)
+        if true then
+            DrawText(0.0, 0.0)
+            ClearDrawOrigin()
+        else
+            DrawText(_x, _y)
+        end
+    end
+end
 
 -- Control the movements of a car
 function UpdateCablecarMovement(cablecar)
@@ -220,7 +304,7 @@ function UpdateCablecarMovement(cablecar)
 
             -- Check if we've reached the top
             if cablecar.gradient >= #TRACKS[cablecar.index] then
-                cablecar.state = "IDLE_TOP"
+                cablecar.state = "MOVE_TO_IDLE_TOP"
                 cablecar.gradient_distance = 0.0
                 return
             end
@@ -239,7 +323,8 @@ function UpdateCablecarMovement(cablecar)
         end
 
         -- Set the position of the car
-        SetEntityCoords(cablecar.entity, cablecar.position + vector3(-0.2, 0.0, zLerp), 1, false, 0, 1)
+        SetEntityCoords(cablecar.entity, cablecar.position + cablecar.offset + vector3(0.0, 0.0, zLerp), 1, false, 0, 1)
+        GivePlayerOptionToJoinMyCablecar(cablecar, true)
 
     elseif cablecar.state == "MOVE_DOWN" then
 
@@ -272,10 +357,12 @@ function UpdateCablecarMovement(cablecar)
             cablecar.gradient_distance = GetDistanceBetweenCoords(_prev, _next, true)
             cablecar.run_timer = 0.0
 
-            -- Check if we've reached the top
+            -- Check if we've reached the bottom again
             if cablecar.gradient <= 1 then
-                cablecar.state = "IDLE_BOTTOM"
+                -- Set to raw idle to do nothing and ask the server to sync cars
+                cablecar.state = "IDLE"
                 cablecar.gradient_distance = 0.0
+                TriggerServerEvent("omni:cablecar:host:sync", cablecar.index, "IDLE_BOTTOM")
                 return
             end
 
@@ -292,39 +379,196 @@ function UpdateCablecarMovement(cablecar)
         end
 
         -- Set the position of the car
-        SetEntityCoords(cablecar.entity, cablecar.position + vector3(-0.2, 0.0, zLerp), 1, false, 0, 1)
+        SetEntityCoords(cablecar.entity, cablecar.position + cablecar.offset + vector3(0.0, 0.0, zLerp), 1, false, 0, 1)
+        GivePlayerOptionToJoinMyCablecar(cablecar, true)
+
+    elseif cablecar.state == "IDLE_TO_MOVE_UP" then
+
+        cablecar.gradient = 1
+        cablecar.gradient_distance = 0.0
+        cablecar.run_timer = 0.0
+
+        if cablecar.is_player_seated then
+            -- add scenic camera
+        else
+            CheckIfPlayerShouldBeKickedOut(cablecar)
+        end
+
+        -- Close doors
+        SetCablecarDoors(cablecar, false)
+
+        cablecar.audio = GetSoundId()
+        PlaySoundFromEntity(cablecar.audio, "Running", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
+
+        cablecar.state = "MOVE_UP"
+
+    elseif cablecar.state == "IDLE_TO_MOVE_DOWN" then
+
+        cablecar.gradient = #TRACKS[cablecar.index]
+        cablecar.gradient_distance = 0.0
+        cablecar.run_timer = 0.0
+
+        if cablecar.is_player_seated then
+            -- add scenic camera
+        else
+            CheckIfPlayerShouldBeKickedOut(cablecar)
+        end
+
+        -- Close doors
+        SetCablecarDoors(cablecar, false)
+
+        cablecar.audio = GetSoundId()
+        PlaySoundFromEntity(cablecar.audio, "Running", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
+
+        cablecar.state = "MOVE_DOWN"
+
+    elseif cablecar.state == "MOVE_TO_IDLE_TOP" then
+
+        cablecar.position = TRACKS[cablecar.index][#TRACKS[cablecar.index]]
+        SetEntityCoords(cablecar.entity, cablecar.position + cablecar.offset + vector3(0.0, 0.0, 0.0), 1, false, 0, 1)
+
+        if cablecar.is_player_seated then
+            -- kick player out
+            -- KickPlayerOutOfMyCablecar(cablecar)
+            -- cablecar.is_player_seated = false
+        end
+
+        -- Open doors
+        SetCablecarDoors(cablecar, true)
+
+        ReleaseRunningSound(cablecar)
+
+        cablecar.state = "IDLE_TOP"
+        cablecar.run_timer = 0.0
+
+    elseif cablecar.state == "MOVE_TO_IDLE_BOTTOM" then
+
+        cablecar.position = TRACKS[cablecar.index][1]
+        SetEntityCoords(cablecar.entity, cablecar.position + cablecar.offset + vector3(0.0, 0.0, 0.0), 1, false, 0, 1)
+
+        if cablecar.is_player_seated then
+            -- kick player out
+            -- KickPlayerOutOfMyCablecar(cablecar)
+            -- cablecar.is_player_seated = false
+        end
+
+        -- Open doors
+        SetCablecarDoors(cablecar, true)
+
+        ReleaseRunningSound(cablecar)
+
+        cablecar.state = "IDLE_BOTTOM"
+        cablecar.run_timer = 0.0
 
     elseif cablecar.state == "IDLE_TOP" then
 
         -- Idle state for idling at the top station
 
         -- Wait 10 seconds (if that's even how it works lmao)
-        cablecar.run_timer = cablecar.run_timer + (Timestep() / 10.0)
+        cablecar.run_timer = cablecar.run_timer + (Timestep() / 20.0)
 
         -- If the time is up we start moving down
         if cablecar.run_timer > 1.0 then
-            cablecar.state = "MOVE_DOWN"
+            cablecar.state = "IDLE_TO_MOVE_DOWN"
             cablecar.run_timer = 0.0
         end
+
+        GivePlayerOptionToJoinMyCablecar(cablecar)
+
     elseif cablecar.state == "IDLE_BOTTOM" then
 
         -- Idle state for idling at the bottom station
 
         -- Wait 10 seconds (if that's even how it works lmao)
-        cablecar.run_timer = cablecar.run_timer + (Timestep() / 10.0)
+        cablecar.run_timer = cablecar.run_timer + (Timestep() / 20.0)
 
         -- If the time is up we start moving up
         if cablecar.run_timer > 1.0 then
-            cablecar.state = "MOVE_UP"
+            cablecar.state = "IDLE_TO_MOVE_UP"
             cablecar.run_timer = 0.0
         end
+
+        GivePlayerOptionToJoinMyCablecar(cablecar)
 
     elseif cablecar.state == "IDLE" then
 
         -- Just a default state, it does absolutely fuck all
-        cablecar.direction = 0.0
+        -- Used to halt movement until host and server sync is done
 
     end
+end
+
+function ReleaseRunningSound(cablecar)
+    if cablecar.audio ~= -1 and cablecar.audio ~= nil then
+        StopSound(audio)
+        ReleaseSoundId(audio)
+        cablecar.audio = -1
+    end
+end
+
+function CheckIfPlayerShouldBeKickedOut(cablecar)
+    local ply = PlayerPedId()
+    local pos = cablecar.position + vector3(0.0, 0.0, -5.3)
+    local plypos = GetEntityCoords(ply, true)
+    local dist = #(pos - plypos)
+    if dist < 3.0 then
+        KickPlayerOutOfMyCablecar(cablecar)
+    end
+end
+
+function KickPlayerOutOfMyCablecar(cablecar)
+    local ply = PlayerPedId()
+    cablecar.is_player_seated = false
+    DetachEntity(ply, 0, 0)
+    local _, rightvec, _ = GetEntityMatrix(cablecar.entity)
+    local right = vector3(rightvec.x * 3.5, rightvec.y * 3.5, rightvec.z * 3.5)
+    SetEntityCoords(ply, cablecar.position + right + vector3(0.0, 0.0, -5.3), xAxis, yAxis, zAxis, clearArea)
+end
+
+function GivePlayerOptionToJoinMyCablecar(cablecar, moving)
+    local ply = PlayerPedId()
+    local pos = cablecar.position + vector3(0.0, 0.0, -5.3)
+    if not cablecar.is_player_seated then
+        local plypos = GetEntityCoords(ply, true)
+        local dist = #(pos - plypos)
+        if dist < 3.0 then
+            DrawCablecarText3D("Press ~g~E ~w~to enter the cablecar", pos.x, pos.y, pos.z + 1.0)
+            if IsControlJustPressed(0, 38) then
+                cablecar.is_player_seated = true
+                AttachEntityToEntity(ply, cablecar.entity, 0, (plypos - cablecar.position), GetEntityRotation(ply, 0), 0, 0, 0, 1, 0, 0)
+            end
+        end
+    else
+        -- give player option to exit
+        if not moving then
+            DrawCablecarText3D("Press ~g~E ~w~to exit the cablecar", pos.x, pos.y, pos.z + 1.0)
+            if IsControlJustPressed(0, 38) then
+                cablecar.is_player_seated = false
+                DetachEntity(ply, 0, 0)
+            end
+        end
+    end
+end
+
+function SetCablecarDoors(cablecar, state)
+    local doorOffset = 0.0
+    if state == true then
+        doorOffset = 2.0
+        PlaySoundFromEntity(-1, "Arrive_Station", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
+        PlaySoundFromEntity(-1, "DOOR_OPEN", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
+    else
+        doorOffset = 0.0
+        PlaySoundFromEntity(-1, "Leave_Station", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
+        PlaySoundFromEntity(-1, "DOOR_CLOSE", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
+    end
+    DetachEntity(cablecar.doorLL, 0, 0)
+    DetachEntity(cablecar.doorLR, 0, 0)
+    DetachEntity(cablecar.doorRL, 0, 0)
+    DetachEntity(cablecar.doorRR, 0, 0)
+    AttachEntityToEntity(cablecar.doorLL, cablecar.entity, 0, 0.0, doorOffset, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
+    AttachEntityToEntity(cablecar.doorLR, cablecar.entity, 0, 0.0, -doorOffset, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
+    AttachEntityToEntity(cablecar.doorRL, cablecar.entity, 0, 0.0, doorOffset, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
+    AttachEntityToEntity(cablecar.doorRR, cablecar.entity, 0, 0.0, -doorOffset, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
 end
 
 -- Check what direction the specific car is going
