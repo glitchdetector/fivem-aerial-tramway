@@ -551,24 +551,34 @@ function GivePlayerOptionToJoinMyCablecar(cablecar, moving)
 end
 
 function SetCablecarDoors(cablecar, state)
-    local doorOffset = 0.0
+    local doorClosePos = 0.95
+	local doorOpenDist = 0.9
     if state == true then
-        doorOffset = 2.0
+        doorStart = doorClosePos
+		doorDirect = 1
         PlaySoundFromEntity(-1, "Arrive_Station", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
         PlaySoundFromEntity(-1, "DOOR_OPEN", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
     else
-        doorOffset = 0.0
+        doorStart = doorClosePos+doorOpenDist
+		doorDirect = -1
         PlaySoundFromEntity(-1, "Leave_Station", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
         PlaySoundFromEntity(-1, "DOOR_CLOSE", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
     end
-    DetachEntity(cablecar.doorLL, 0, 0)
-    DetachEntity(cablecar.doorLR, 0, 0)
-    DetachEntity(cablecar.doorRL, 0, 0)
-    DetachEntity(cablecar.doorRR, 0, 0)
-    AttachEntityToEntity(cablecar.doorLL, cablecar.entity, 0, 0.0, doorOffset, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
-    AttachEntityToEntity(cablecar.doorLR, cablecar.entity, 0, 0.0, -doorOffset, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
-    AttachEntityToEntity(cablecar.doorRL, cablecar.entity, 0, 0.0, doorOffset, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
-    AttachEntityToEntity(cablecar.doorRR, cablecar.entity, 0, 0.0, -doorOffset, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
+	
+	for i = 0,100,1
+	do
+		local doorPos = doorStart+doorDirect*doorOpenDist*(i/100)
+		DetachEntity(cablecar.doorLL, 0, 0)
+		DetachEntity(cablecar.doorLR, 0, 0)
+		DetachEntity(cablecar.doorRL, 0, 0)
+		DetachEntity(cablecar.doorRR, 0, 0)
+		AttachEntityToEntity(cablecar.doorLL, cablecar.entity, 0, 0.0, -doorPos, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
+		AttachEntityToEntity(cablecar.doorLR, cablecar.entity, 0, 0.0, doorPos, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
+		AttachEntityToEntity(cablecar.doorRL, cablecar.entity, 0, 0.0, doorPos, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
+		AttachEntityToEntity(cablecar.doorRR, cablecar.entity, 0, 0.0, -doorPos, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
+		Wait(10)
+	end
+	Wait(2000)
 end
 
 -- Check what direction the specific car is going
