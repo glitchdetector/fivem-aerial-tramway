@@ -82,7 +82,8 @@ local CABLE_CARS = {
         offset_modifier = 0.0, -- Something believed to be an offset modifier
         can_move = true, -- Determine if the car can move, not actually used here though
         is_player_seated = false, -- Another value from the SP script, not actually used because fucking hell I'm tired
-        speed = 7.5, -- Movement speed modifier, determines the speed of the car on the track
+        speed = 17.5, -- Movement speed modifier, determines the speed of the car on the track
+		maxSpeedDistance = 50, -- Distance from station at which the car will attain maximum speed
         state = "IDLE", -- The current state of the car
         offset = vector3(-0.2, 0.0, 0.0),
     },
@@ -103,7 +104,8 @@ local CABLE_CARS = {
         offset_modifier = 0.0,
         can_move = true,
         is_player_seated = false,
-        speed = 7.5,
+        speed = 17.5,
+		maxSpeedDistance = 50,
         state = "IDLE",
         offset = vector3(-0.2, 0.0, 0.0),
     },
@@ -287,6 +289,14 @@ function UpdateCablecarMovement(cablecar)
         -- Calculate the speed we want to move between segments
         local dist = cablecar.gradient_distance
         local speed = ((1.0 / dist) * Timestep()) * cablecar.speed
+		
+		local distanceFromOrigin = GetDistanceBetweenCoords(TRACKS[cablecar.index][#TRACKS[cablecar.index]], cablecar.position, true)
+		local distanceFromDestin = GetDistanceBetweenCoords(TRACKS[cablecar.index][1], cablecar.position, true)
+		if distanceFromOrigin <= cablecar.maxSpeedDistance then
+			speed = speed * math.abs(distanceFromOrigin + 1)/cablecar.maxSpeedDistance
+		elseif distanceFromDestin <= cablecar.maxSpeedDistance then
+			speed = speed * math.abs(distanceFromDestin + 1)/cablecar.maxSpeedDistance
+		end
 
         -- Add the speed to the timer
         cablecar.run_timer = cablecar.run_timer + speed
@@ -342,6 +352,14 @@ function UpdateCablecarMovement(cablecar)
         -- Calculate the speed we want to move between segments
         local dist = cablecar.gradient_distance
         local speed = ((1.0 / dist) * Timestep()) * cablecar.speed
+		
+		local distanceFromOrigin = GetDistanceBetweenCoords(TRACKS[cablecar.index][#TRACKS[cablecar.index]], cablecar.position, true)
+		local distanceFromDestin = GetDistanceBetweenCoords(TRACKS[cablecar.index][1], cablecar.position, true)
+		if distanceFromOrigin <= cablecar.maxSpeedDistance then
+			speed = speed * math.abs(distanceFromOrigin + 1)/cablecar.maxSpeedDistance
+		elseif distanceFromDestin <= cablecar.maxSpeedDistance then
+			speed = speed * math.abs(distanceFromDestin + 1)/cablecar.maxSpeedDistance
+		end
 
         -- Add the speed to the timer
         cablecar.run_timer = cablecar.run_timer + speed
