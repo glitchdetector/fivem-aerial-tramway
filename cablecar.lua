@@ -85,6 +85,7 @@ local CABLE_CARS = {
         speed = 17.5, -- Movement speed modifier, determines the speed of the car on the track
 		maxSpeedDistance = 50, -- Distance from station at which the car will attain maximum speed
         state = "IDLE", -- The current state of the car
+	showTramBlips = true, -- Show blip on the map
         offset = vector3(-0.2, 0.0, 0.0),
     },
     [1] = { -- Right track car
@@ -107,6 +108,7 @@ local CABLE_CARS = {
         speed = 17.5,
 		maxSpeedDistance = 50,
         state = "IDLE",
+	showTramBlips = true,
         offset = vector3(-0.2, 0.0, 0.0),
     },
 }
@@ -167,6 +169,30 @@ Citizen.CreateThread(function()
     CABLE_CARS[1].state = "MOVE_TO_IDLE_TOP"
     -- KickPlayerOutOfMyCablecar(CABLE_CARS[0])
     -- KickPlayerOutOfMyCablecar(CABLE_CARS[1])
+		
+	if CABLE_CARS[0].showTramBlips then
+		local TramBlip1 = AddBlipForEntity(CABLE_CARS[0].entity)      
+		SetBlipSprite (TramBlip1, 36)
+		SetBlipDisplay(TramBlip1, 4)
+		SetBlipScale  (TramBlip1, 0.8)
+		SetBlipColour (TramBlip1, 2)
+		SetBlipAsShortRange(TramBlip1, true)
+		BeginTextCommandSetBlipName("STRING")
+		AddTextComponentString("Pala Springs Tramway")
+		EndTextCommandSetBlipName(TramBlip1)
+	end
+	if CABLE_CARS[1].showTramBlips then
+		local TramBlip2 = AddBlipForEntity(CABLE_CARS[1].entity)      
+		SetBlipSprite (TramBlip2, 36)
+		SetBlipDisplay(TramBlip2, 4)
+		SetBlipScale  (TramBlip2, 0.8)
+		SetBlipColour (TramBlip2, 2)
+		SetBlipAsShortRange(TramBlip2, true)
+		BeginTextCommandSetBlipName("STRING")
+		AddTextComponentString("Pala Springs Tramway")
+		EndTextCommandSetBlipName(TramBlip2)
+	end
+		
     -- Control movement forever
     while true do
         Wait(0)
