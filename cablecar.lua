@@ -10,7 +10,7 @@
 
 -- Lerp, not to be confused with Liable Emerates Role Play
 function Lerp(a, b, t)
-	return a + (b - a) * t
+    return a + (b - a) * t
 end
 
 -- Mass lerper
@@ -83,9 +83,9 @@ local CABLE_CARS = {
         can_move = true, -- Determine if the car can move, not actually used here though
         is_player_seated = false, -- Another value from the SP script, not actually used because fucking hell I'm tired
         speed = 17.5, -- Movement speed modifier, determines the speed of the car on the track
-		maxSpeedDistance = 50, -- Distance from station at which the car will attain maximum speed
+        maxSpeedDistance = 50, -- Distance from station at which the car will attain maximum speed
         state = "IDLE", -- The current state of the car
-	showTramBlips = true, -- Show blip on the map
+    showTramBlips = true, -- Show blip on the map
         offset = vector3(-0.2, 0.0, 0.0),
     },
     [1] = { -- Right track car
@@ -106,9 +106,9 @@ local CABLE_CARS = {
         can_move = true,
         is_player_seated = false,
         speed = 17.5,
-		maxSpeedDistance = 50,
+        maxSpeedDistance = 50,
         state = "IDLE",
-	showTramBlips = true,
+    showTramBlips = true,
         offset = vector3(-0.2, 0.0, 0.0),
     },
 }
@@ -169,30 +169,30 @@ Citizen.CreateThread(function()
     CABLE_CARS[1].state = "MOVE_TO_IDLE_TOP"
     -- KickPlayerOutOfMyCablecar(CABLE_CARS[0])
     -- KickPlayerOutOfMyCablecar(CABLE_CARS[1])
-		
-	if CABLE_CARS[0].showTramBlips then
-		local TramBlip1 = AddBlipForEntity(CABLE_CARS[0].entity)      
-		SetBlipSprite (TramBlip1, 36)
-		SetBlipDisplay(TramBlip1, 4)
-		SetBlipScale  (TramBlip1, 0.8)
-		SetBlipColour (TramBlip1, 2)
-		SetBlipAsShortRange(TramBlip1, true)
-		BeginTextCommandSetBlipName("STRING")
-		AddTextComponentString("Pala Springs Tramway")
-		EndTextCommandSetBlipName(TramBlip1)
-	end
-	if CABLE_CARS[1].showTramBlips then
-		local TramBlip2 = AddBlipForEntity(CABLE_CARS[1].entity)      
-		SetBlipSprite (TramBlip2, 36)
-		SetBlipDisplay(TramBlip2, 4)
-		SetBlipScale  (TramBlip2, 0.8)
-		SetBlipColour (TramBlip2, 2)
-		SetBlipAsShortRange(TramBlip2, true)
-		BeginTextCommandSetBlipName("STRING")
-		AddTextComponentString("Pala Springs Tramway")
-		EndTextCommandSetBlipName(TramBlip2)
-	end
-		
+        
+    if CABLE_CARS[0].showTramBlips then
+        local TramBlip1 = AddBlipForEntity(CABLE_CARS[0].entity)      
+        SetBlipSprite (TramBlip1, 36)
+        SetBlipDisplay(TramBlip1, 4)
+        SetBlipScale  (TramBlip1, 0.8)
+        SetBlipColour (TramBlip1, 2)
+        SetBlipAsShortRange(TramBlip1, true)
+        BeginTextCommandSetBlipName("STRING")
+        AddTextComponentString("Pala Springs Tramway")
+        EndTextCommandSetBlipName(TramBlip1)
+    end
+    if CABLE_CARS[1].showTramBlips then
+        local TramBlip2 = AddBlipForEntity(CABLE_CARS[1].entity)      
+        SetBlipSprite (TramBlip2, 36)
+        SetBlipDisplay(TramBlip2, 4)
+        SetBlipScale  (TramBlip2, 0.8)
+        SetBlipColour (TramBlip2, 2)
+        SetBlipAsShortRange(TramBlip2, true)
+        BeginTextCommandSetBlipName("STRING")
+        AddTextComponentString("Pala Springs Tramway")
+        EndTextCommandSetBlipName(TramBlip2)
+    end
+        
     -- Control movement forever
     while true do
         Wait(0)
@@ -202,8 +202,8 @@ Citizen.CreateThread(function()
     end
 end)
 
-RegisterNetEvent("omni:cablecar:forceState")
-AddEventHandler("omni:cablecar:forceState", function(index, state)
+RegisterNetEvent("omni:forceState")
+AddEventHandler("omni:forceState", function(index, state)
     local cablecar = CABLE_CARS[index]
     if state == "IDLE_BOTTOM" then
         cablecar.state = "MOVE_TO_IDLE_BOTTOM"
@@ -315,14 +315,14 @@ function UpdateCablecarMovement(cablecar)
         -- Calculate the speed we want to move between segments
         local dist = cablecar.gradient_distance
         local speed = ((1.0 / dist) * Timestep()) * cablecar.speed
-		
-		local distanceFromOrigin = GetDistanceBetweenCoords(TRACKS[cablecar.index][#TRACKS[cablecar.index]], cablecar.position, true)
-		local distanceFromDestin = GetDistanceBetweenCoords(TRACKS[cablecar.index][1], cablecar.position, true)
-		if distanceFromOrigin <= cablecar.maxSpeedDistance then
-			speed = speed * math.abs(distanceFromOrigin + 1)/cablecar.maxSpeedDistance
-		elseif distanceFromDestin <= cablecar.maxSpeedDistance then
-			speed = speed * math.abs(distanceFromDestin + 1)/cablecar.maxSpeedDistance
-		end
+        
+        local distanceFromOrigin = GetDistanceBetweenCoords(TRACKS[cablecar.index][#TRACKS[cablecar.index]], cablecar.position, true)
+        local distanceFromDestin = GetDistanceBetweenCoords(TRACKS[cablecar.index][1], cablecar.position, true)
+        if distanceFromOrigin <= cablecar.maxSpeedDistance then
+            speed = speed * math.abs(distanceFromOrigin + 1)/cablecar.maxSpeedDistance
+        elseif distanceFromDestin <= cablecar.maxSpeedDistance then
+            speed = speed * math.abs(distanceFromDestin + 1)/cablecar.maxSpeedDistance
+        end
 
         -- Add the speed to the timer
         cablecar.run_timer = cablecar.run_timer + speed
@@ -378,14 +378,14 @@ function UpdateCablecarMovement(cablecar)
         -- Calculate the speed we want to move between segments
         local dist = cablecar.gradient_distance
         local speed = ((1.0 / dist) * Timestep()) * cablecar.speed
-		
-		local distanceFromOrigin = GetDistanceBetweenCoords(TRACKS[cablecar.index][#TRACKS[cablecar.index]], cablecar.position, true)
-		local distanceFromDestin = GetDistanceBetweenCoords(TRACKS[cablecar.index][1], cablecar.position, true)
-		if distanceFromOrigin <= cablecar.maxSpeedDistance then
-			speed = speed * math.abs(distanceFromOrigin + 1)/cablecar.maxSpeedDistance
-		elseif distanceFromDestin <= cablecar.maxSpeedDistance then
-			speed = speed * math.abs(distanceFromDestin + 1)/cablecar.maxSpeedDistance
-		end
+        
+        local distanceFromOrigin = GetDistanceBetweenCoords(TRACKS[cablecar.index][#TRACKS[cablecar.index]], cablecar.position, true)
+        local distanceFromDestin = GetDistanceBetweenCoords(TRACKS[cablecar.index][1], cablecar.position, true)
+        if distanceFromOrigin <= cablecar.maxSpeedDistance then
+            speed = speed * math.abs(distanceFromOrigin + 1)/cablecar.maxSpeedDistance
+        elseif distanceFromDestin <= cablecar.maxSpeedDistance then
+            speed = speed * math.abs(distanceFromDestin + 1)/cablecar.maxSpeedDistance
+        end
 
         -- Add the speed to the timer
         cablecar.run_timer = cablecar.run_timer + speed
@@ -406,7 +406,7 @@ function UpdateCablecarMovement(cablecar)
                 -- Set to raw idle to do nothing and ask the server to sync cars
                 cablecar.state = "IDLE"
                 cablecar.gradient_distance = 0.0
-                TriggerServerEvent("omni:cablecar:host:sync", cablecar.index, "IDLE_BOTTOM")
+                TriggerServerEvent("omni:sync", cablecar.index, "IDLE_BOTTOM")
                 return
             end
 
@@ -579,7 +579,8 @@ function GivePlayerOptionToJoinMyCablecar(cablecar, moving)
             DrawCablecarText3D("Press ~g~E ~w~to enter the cablecar", pos.x, pos.y, pos.z + 1.0)
             if IsControlJustPressed(0, 38) then
                 cablecar.is_player_seated = true
-                AttachEntityToEntity(ply, cablecar.entity, 0, (plypos - cablecar.position), GetEntityRotation(ply, 0), 0, 0, 0, 1, 0, 0)
+                FreezeEntityPosition(xPlayer ,true)
+                AttachEntityToEntity(ply, cablecar.entity, -1, (plypos - cablecar.position), GetEntityRotation(ply, 0), 0, 0, 0, 1, 0, 1)
             end
         end
     else
@@ -588,6 +589,7 @@ function GivePlayerOptionToJoinMyCablecar(cablecar, moving)
             DrawCablecarText3D("Press ~g~E ~w~to exit the cablecar", pos.x, pos.y, pos.z + 1.0)
             if IsControlJustPressed(0, 38) then
                 cablecar.is_player_seated = false
+                FreezeEntityPosition(xPlayer ,false)
                 DetachEntity(ply, 0, 0)
             end
         end
@@ -596,33 +598,33 @@ end
 
 function SetCablecarDoors(cablecar, state)
     local doorClosePos = 0.95
-	local doorOpenDist = 0.9
+    local doorOpenDist = 0.9
     if state == true then
         doorStart = doorClosePos
-		doorDirect = 1
+        doorDirect = 1
         PlaySoundFromEntity(-1, "Arrive_Station", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
         PlaySoundFromEntity(-1, "DOOR_OPEN", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
     else
         doorStart = doorClosePos+doorOpenDist
-		doorDirect = -1
+        doorDirect = -1
         PlaySoundFromEntity(-1, "Leave_Station", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
         PlaySoundFromEntity(-1, "DOOR_CLOSE", cablecar.entity, "CABLE_CAR_SOUNDS", 0, 0)
     end
-	
-	for i = 0,100,1
-	do
-		local doorPos = doorStart+doorDirect*doorOpenDist*(i/100)
-		DetachEntity(cablecar.doorLL, 0, 0)
-		DetachEntity(cablecar.doorLR, 0, 0)
-		DetachEntity(cablecar.doorRL, 0, 0)
-		DetachEntity(cablecar.doorRR, 0, 0)
-		AttachEntityToEntity(cablecar.doorLL, cablecar.entity, 0, 0.0, -doorPos, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
-		AttachEntityToEntity(cablecar.doorLR, cablecar.entity, 0, 0.0, doorPos, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
-		AttachEntityToEntity(cablecar.doorRL, cablecar.entity, 0, 0.0, doorPos, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
-		AttachEntityToEntity(cablecar.doorRR, cablecar.entity, 0, 0.0, -doorPos, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
-		Wait(10)
-	end
-	Wait(2000)
+    
+    for i = 0,100,1
+    do
+        local doorPos = doorStart+doorDirect*doorOpenDist*(i/100)
+        DetachEntity(cablecar.doorLL, 0, 0)
+        DetachEntity(cablecar.doorLR, 0, 0)
+        DetachEntity(cablecar.doorRL, 0, 0)
+        DetachEntity(cablecar.doorRR, 0, 0)
+        AttachEntityToEntity(cablecar.doorLL, cablecar.entity, 0, 0.0, -doorPos, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
+        AttachEntityToEntity(cablecar.doorLR, cablecar.entity, 0, 0.0, doorPos, 0.0, 0.0, 0.0, 0.0, 0, 0, 1, 0, 2, 1)
+        AttachEntityToEntity(cablecar.doorRL, cablecar.entity, 0, 0.0, doorPos, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
+        AttachEntityToEntity(cablecar.doorRR, cablecar.entity, 0, 0.0, -doorPos, 0.0, 0.0, 0.0, 180.0, 0, 0, 1, 0, 2, 1)
+        Wait(10)
+    end
+    Wait(2000)
 end
 
 -- Check what direction the specific car is going
